@@ -1,22 +1,31 @@
-// pipeline.c
+#include <stdint.h>
+
+#define NOINLINE __attribute__((noinline))
+
 static int clamp(int x) {
-  return x < 0 ? 0 : (x > 255 ? 255 : x);
+  if (x < 0) return 0;
+  if (x > 255) return 255;
+  return x;
 }
 
-static int brighten(int x) { return clamp(x + 10); }
-static int contrast(int x) { return clamp((x - 128) * 2 + 128); }
-static int invert(int x)   { return 255 - x; }
+static int f1(int x) { return clamp(x + 1); }
+static int f2(int x) { return clamp(x * 2); }
+static int f3(int x) { return clamp(x - 3); }
+static int f4(int x) { return clamp(x ^ 4); }
+static int f5(int x) { return clamp(x + 5); }
 
-static int process(int x) {
-  x = brighten(x);
-  x = contrast(x);
-  x = invert(x);
+static NOINLINE int process(int x) {
+  x = f1(x);
+  x = f2(x);
+  x = f3(x);
+  x = f4(x);
+  x = f5(x);
   return x;
 }
 
 int main() {
-  int acc = 0;
-  for (int i = 0; i < 10000000; ++i)
+  volatile int acc = 0;
+  for (int i = 0; i < 150000000; ++i)
     acc += process(i & 255);
   return acc;
 }

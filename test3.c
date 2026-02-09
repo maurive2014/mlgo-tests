@@ -1,29 +1,26 @@
-// hash.c
+#include <stdint.h>
+
+#define NOINLINE __attribute__((noinline))
 #define N 1024
 
-typedef struct {
-  int key;
-  int value;
-} Entry;
-
-static unsigned hash(int k) {
-  return (unsigned)k * 2654435761u % N;
+static uint32_t hash(uint32_t x) {
+  x ^= x >> 16;
+  x *= 0x7feb352d;
+  x ^= x >> 15;
+  return x & (N - 1);
 }
 
-static int lookup(Entry *t, int k) {
-  unsigned h = hash(k);
-  if (t[h].key == k)
-    return t[h].value;
-  return -1;
+static NOINLINE int lookup(int *t, int k) {
+  uint32_t h = hash(k);
+  return t[h];
 }
 
 int main() {
-  Entry table[N] = {0};
-  table[42].key = 42;
-  table[42].value = 7;
+  static int table[N];
+  for (int i = 0; i < N; ++i) table[i] = i;
 
-  int s = 0;
-  for (int i = 0; i < 10000000; ++i)
-    s += lookup(table, 42);
-  return s;
+  volatile int sum = 0;
+  for (int i = 0; i < 200000000; ++i)
+    sum += lookup(table, i);
+  return sum;
 }
